@@ -5,8 +5,11 @@ import { supabase } from '@/lib/supabase'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -15,15 +18,19 @@ export default function RegisterPage() {
     setLoading(true)
     const { error } = await supabase.auth.signUp({ email, password })
     if (error) {
-      alert(error.message)
+      toast.error(error.message)
     } else {
-      alert('Check your email for confirmation link.')
+      toast.success('Registration successful! Redirecting to onboarding...')
+      router.push('/onboarding/steps/business-profile')
     }
     setLoading(false)
   }
 
   const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'google' })
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' })
+    if (error) {
+      toast.error(error.message)
+    }
   }
 
   return (
@@ -33,13 +40,13 @@ export default function RegisterPage() {
       <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="mb-3" />
       <Button onClick={handleRegister} className="w-full mb-2" disabled={loading}>
         {loading ? (
-                            <div className="flex items-center gap-2 justify-center">
-                                <Spinner />
-                                Registering...
-                            </div>
-                        ) : (
-                            'Register'
-                        )}
+          <div className="flex items-center gap-2 justify-center">
+            <Spinner />
+            Registering...
+          </div>
+        ) : (
+          'Register'
+        )}
       </Button>
       <Button variant="outline" onClick={handleGoogleLogin} className="w-full">
         Continue with Google
